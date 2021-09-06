@@ -46,6 +46,8 @@ namespace cg
 // =====
 class Scene: public SceneNode
 {
+private:
+    std::list<SceneObject*> sceneObjectList;
 public:
   Color backgroundColor{Color::gray};
 
@@ -54,6 +56,26 @@ public:
     SceneNode{name}
   {
     // do nothing
+  }
+
+  int
+      sizeReturn() {
+      return sceneObjectList.size();
+  }
+
+  auto
+      listReturn() {
+      return sceneObjectList;
+  }
+
+  void
+      removeSceneObject(SceneObject* a) {
+      sceneObjectList.remove(a);
+  }
+
+  void
+      addObjectScene(SceneObject* o) {
+      sceneObjectList.insert(sceneObjectList.begin(), o);
   }
 
 }; // Scene

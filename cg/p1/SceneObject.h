@@ -35,6 +35,9 @@
 
 #include "SceneNode.h"
 #include "Transform.h"
+#include "Component.h"
+#include "Primitive.h"
+#include <list>
 
 namespace cg
 { // begin namespace cg
@@ -56,7 +59,8 @@ public:
   SceneObject(const char* name, Scene* scene):
     SceneNode{name},
     _scene{scene},
-    _parent{}
+    _parent{},
+    _primitive{ nullptr }
   {
     makeUse(&_transform);
   }
@@ -72,6 +76,17 @@ public:
   {
     return _parent;
   }
+  //Adiciona um objeto de cena (filho) a coleção de objetos de cena de um objeto de cena
+  void addSceneObjectChild(SceneObject* child);
+
+  //remove um objeto de cena (filho) da coleção de objetos de cena de um objeto de cena
+  void removeSceneObjectChild(SceneObject* child);
+
+  //Adiciona um componente a coleção de componentes de um objeto de cena
+  void addComponent(Component* component);
+
+  //remove um componente a coleção de componentes de um objeto de cena
+  void removeComponent(Component* component);
 
   /// Sets the parent of this scene object.
   void setParent(SceneObject* parent);
@@ -82,10 +97,41 @@ public:
     return &_transform;
   }
 
+  auto
+      child()
+  {
+      return sceneObjectList;
+  }
+
+  int
+      size()
+  {
+      return sceneObjectList.size();
+  }
+
+  //returns the componentList.
+  auto
+      getComponentList()
+  {
+      return componentList;
+  }
+
+  void setPrimitive(Primitive* _primitive) {
+      this->_primitive = _primitive;
+  }
+
+  auto
+      getPrimitive() {
+      return _primitive;
+  }
+
 private:
   Scene* _scene;
   SceneObject* _parent;
   Transform _transform;
+  Primitive* _primitive;
+  std::list<SceneObject*> sceneObjectList;
+  std::list<Component*> componentList;
 
   friend class Scene;
 

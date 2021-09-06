@@ -1,4 +1,6 @@
 #include "P1.h"
+#include <iostream>
+#include <string>
 
 namespace cg
 { // begin namespace cg

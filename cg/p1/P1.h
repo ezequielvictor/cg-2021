@@ -4,6 +4,7 @@
 #include "Primitive.h"
 #include "Scene.h"
 #include "graphics/Application.h"
+#include "SceneObject.h"
 
 using namespace cg;
 
@@ -34,6 +35,7 @@ private:
   SceneNode* _current{};
   Color selectedWireframeColor{255, 102, 0};
   mat4f _transform{mat4f::identity()};
+  int counter, counterBox = 0;
 
 
   void buildScene();
@@ -43,6 +45,23 @@ private:
   void sceneGui();
   void sceneObjectGui();
   void objectGui();
+  void funcao(SceneObject* obj, ImGuiTreeNodeFlags* flag);
+  void func(SceneObject*);
+  int getCountObject() {
+	  return counter;
+  }
+
+  void addCountObject() {
+	  counter += 1;
+  }
+
+  int getCountBox() {
+	  return counterBox;
+  }
+
+  void addCountBox() {
+	  counterBox += 1;
+  }
 
 }; // P1
 
