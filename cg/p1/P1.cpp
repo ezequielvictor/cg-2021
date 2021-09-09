@@ -324,7 +324,7 @@ P1::render()
   GLWindow::render();
   for (auto o : _scene->listReturn()) {
       funcRenderAll(o);
-  }0
+  }
 }
 
 void
