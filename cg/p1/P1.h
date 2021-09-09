@@ -46,7 +46,8 @@ private:
   void sceneObjectGui();
   void objectGui();
   void funcao(SceneObject* obj, ImGuiTreeNodeFlags* flag);
-  void func(SceneObject*);
+  void funcRenderAll(SceneObject*);
+
   int getCountObject() {
 	  return counter;
   }

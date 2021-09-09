@@ -92,42 +92,112 @@ namespace ImGui
 inline void
 P1::hierarchyWindow()
 {
-  ImGui::Begin("Hierarchy");
-  if (ImGui::Button("Create###object"))
-    ImGui::OpenPopup("CreateObjectPopup");
-  if (ImGui::BeginPopup("CreateObjectPopup"))
-  {
-    ImGui::MenuItem("Empty Object");
-    if (ImGui::BeginMenu("3D Object"))
+    ImGui::Begin("Hierarchy");
+    if (ImGui::Button("Create###object"))
+        ImGui::OpenPopup("CreateObjectPopup");
+    if (ImGui::BeginPopup("CreateObjectPopup"))
     {
-      if (ImGui::MenuItem("Box"))
-      {
-        // TODO: create a new box.
-      }
-      ImGui::EndMenu();
+        if (ImGui::MenuItem("Empty Object")) {
+            //create a new box
+            P1::addCountObject();
+            std::string objectName = "Object " + std::to_string(P1::getCountObject());
+            char totalObject[100];
+            strcpy_s(totalObject, objectName.c_str());
+
+            SceneObject* _newObject = new SceneObject{ totalObject, _scene };
+
+            if (_current == _scene) {
+                _newObject->setParent(nullptr);
+
+            }
+            else {
+                _newObject->setParent(dynamic_cast<SceneObject*>(_current));
+
+            }
+        }
+        if (ImGui::BeginMenu("3D Object"))
+        {
+            if (ImGui::MenuItem("Box"))
+            {
+                P1::addCountBox();
+                std::string boxName = "Box " + std::to_string(P1::getCountBox());
+                char totalBox[100];
+                strcpy_s(totalBox, boxName.c_str());
+
+                //create a new box.
+                SceneObject* _newObject = new SceneObject{ totalBox, _scene };
+                _newObject->addComponent(makeBoxMesh());
+                if (_current == _scene) {
+                    _newObject->setParent(nullptr); //Adicionando à raiz da cena.
+                }
+                else {
+                    _newObject->setParent(dynamic_cast<SceneObject*>(_current));
+
+                }
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndPopup();
     }
-    ImGui::EndPopup();
-  }
-  ImGui::Separator();
+    ImGui::Separator();
 
-  ImGuiTreeNodeFlags flag{ImGuiTreeNodeFlags_OpenOnArrow};
-  auto open = ImGui::TreeNodeEx(_scene,
-    _current == _scene ? flag | ImGuiTreeNodeFlags_Selected : flag,
-    _scene->name());
+    ImGuiTreeNodeFlags flag{ ImGuiTreeNodeFlags_OpenOnArrow };
+    auto open = ImGui::TreeNodeEx(_scene,
+        _current == _scene ? flag | ImGuiTreeNodeFlags_Selected : flag,
+        _scene->name());
 
-  if (ImGui::IsItemClicked())
-    _current = _scene;
-  if (open)
-  {
-    flag |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-    ImGui::TreeNodeEx(_box,
-      _current == _box ? flag | ImGuiTreeNodeFlags_Selected : flag,
-      _box->name());
     if (ImGui::IsItemClicked())
-      _current = _box;
-    ImGui::TreePop();
-  }
-  ImGui::End();
+        _current = _scene;
+    if (open)
+    {
+        /*
+      flag |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+      ImGui::TreeNodeEx(_box,
+        _current == _box ? flag | ImGuiTreeNodeFlags_Selected : flag,
+        _box->name());
+      if (ImGui::IsItemClicked())
+        _current = _box;
+      ImGui::TreePop();*/
+        for (auto o : _scene->listReturn()) {
+            funcao(o, &flag);
+        }
+        ImGui::TreePop();
+    }
+    ImGui::End();
+}
+
+void
+P1::funcao(cg::SceneObject* obj, ImGuiTreeNodeFlags* flag) {
+    if (!obj->child().empty()) {
+        auto open = ImGui::TreeNodeEx(obj, _current == obj ? *flag | ImGuiTreeNodeFlags_Selected : *flag, obj->name());
+        if (ImGui::IsItemClicked()) {
+            _current = obj;
+        }
+
+        if (open) {
+            if (!obj->child().empty()) {
+                for (auto sc : obj->child()) {
+                    funcao(sc, flag);
+                }
+                ImGui::TreePop();
+
+            }
+
+        }
+
+    }
+
+    else {
+        ImGuiTreeNodeFlags flag;
+
+        flag |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
+        ImGui::TreeNodeEx(obj, _current == _scene ? flag | ImGuiTreeNodeFlags_Selected : flag, obj->name());
+
+        if (ImGui::IsItemClicked())
+            _current = obj;
+
+    }
 }
 
 namespace ImGui
@@ -252,19 +322,33 @@ void
 P1::render()
 {
   GLWindow::render();
-  if (!_box->visible)
-    return;
-  _program.setUniformMat4("transform", _transform);
+  for (auto o : _scene->listReturn()) {
+      funcRenderAll(o);
+  }
+}
 
-  auto m = _primitive->mesh();
+void
+P1::funcRenderAll(SceneObject* sceneObject) {
+    if (sceneObject->getPrimitive() != nullptr)
+        if (sceneObject->visible && sceneObject->getPrimitive() != nullptr) {
+            _program.setUniformMat4("transform", sceneObject->transform()->localToWorldMatrix());
 
-  m->bind();
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  glDrawElements(GL_TRIANGLES, m->vertexCount(), GL_UNSIGNED_INT, 0);
-  if (_current != _box)
-    return;
-  m->setVertexColor(selectedWireframeColor);  
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  glDrawElements(GL_TRIANGLES, m->vertexCount(), GL_UNSIGNED_INT, 0);
-  m->useVertexColors();
+            auto m = sceneObject->getPrimitive()->mesh();
+
+            m->bind();
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            glDrawElements(GL_TRIANGLES, m->vertexCount(), GL_UNSIGNED_INT, 0);
+            /*Para que o objeto selecionado apareça contornado*/
+            if (_current == sceneObject) {
+                m->setVertexColor(selectedWireframeColor);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                glDrawElements(GL_TRIANGLES, m->vertexCount(), GL_UNSIGNED_INT, 0);
+                m->useVertexColors();
+            }
+        }
+
+    for (auto o : sceneObject->child()) {
+        funcRenderAll(o);
+    }
+
 }
